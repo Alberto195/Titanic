@@ -1,5 +1,5 @@
 # Titanic
-Neural network to solve the titanic problem
+Neural network to solve the titanic problem. Because it is shallow its accuracy varies a lot from 0.7 to 0.8.
 
 # Results
 Train on 891 samples
