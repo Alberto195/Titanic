@@ -2,6 +2,7 @@ import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 '''WHAT MATTERS
     sex: more female survivors
@@ -11,78 +12,103 @@ import numpy as np
     Embarked: more survivors from S and passengers overall
     Fare: the greater the price, more chances of living
     Age: Everyone under 10 have more survivability
-    Cabin: it matters, just matters, но не сейчас
+    Cabin: it matters, just matters but too complicated for this model
     '''
 
-""" Инициализация данных """
+""" Data initialization"""
 trd = pd.read_csv('C:/titanic/train.csv')
 tsd = pd.read_csv('C:/titanic/test.csv')
 tsl = pd.read_csv('C:/titanic/gender_submission.csv')
 
-""" Заполнение пропущенных данных """
-trd['Embarked'].fillna(value='C', inplace=True)
-trd['Age'].fillna(value=30.0, inplace=True)
 
-tsd['Embarked'].fillna(value='C', inplace=True)
-tsd['Age'].fillna(value=30.0, inplace=True)
-tsd['Fare'].fillna(value=720.0, inplace=True)
+def filling_na(tr):
+    """ Filling in missing data """
+    tr['Embarked'].fillna(value='C', inplace=True)
+    tr['Age'].fillna(value=30.0, inplace=True)
+    tr['Fare'].fillna(value=720.0, inplace=True)
 
-""" Перевод столбцов со словами в столбцы в цифрами """
-embr_train = pd.get_dummies(trd.Embarked, prefix="Emb", drop_first=True)
-sex_train = pd.get_dummies(trd.Sex, prefix="Sx", drop_first=True)
 
-embr_test = pd.get_dummies(tsd.Embarked, prefix="Emb", drop_first=True)
-sex_test = pd.get_dummies(tsd.Sex, prefix="Sx", drop_first=True)
+def dummies(tr):
+    """ Converting words into numbers """
+    embr = pd.get_dummies(tr.Embarked, prefix="Emb", drop_first=True)
+    sex = pd.get_dummies(tr.Sex, prefix="Sx", drop_first=True)
 
-""" Инициализация лейблов """
-train_set_labels = trd['Survived'].values.reshape([891, 1])
-test_set_labels = tsl['Survived'].values.reshape([418, 1])
+    return embr, sex
 
-""" Удаление ненужных столбцов """
-trd.drop(['Name', 'Ticket', 'PassengerId', 'Survived', 'Sex', 'Embarked', 'Cabin'], axis=1, inplace=True)
-tsd.drop(['Name', 'Ticket', 'PassengerId', 'Sex', 'Embarked', 'Cabin'], axis=1, inplace=True)
 
-""" Создание nparray из данных """
-testik = np.append(trd, embr_train, axis=1)
-train_set = np.append(testik, sex_train, axis=1)
+def label_init():
+    """ Label init """
+    train_set_labels = trd['Survived'].values.reshape([891, 1])
+    test_set_labels = tsl['Survived'].values.reshape([418, 1])
 
-testik = np.append(tsd, embr_test, axis=1)
-test_set = np.append(testik, sex_test, axis=1)
+    return train_set_labels, test_set_labels
 
-""" Перевод все значений в float32 """
-train_set = np.asarray(train_set).astype(np.float32)
-train_set_labels = np.asarray(train_set_labels).astype(np.float32)
 
-test_set = np.asarray(test_set).astype(np.float32)
-test_set_labels = np.asarray(test_set_labels).astype(np.float32)
+def table_drop():
+    """ Deleting unnecessary columns """
+    trd.drop(['Name', 'Ticket', 'PassengerId', 'Survived', 'Sex', 'Embarked', 'Cabin'], axis=1, inplace=True)
+    tsd.drop(['Name', 'Ticket', 'PassengerId', 'Sex', 'Embarked', 'Cabin'], axis=1, inplace=True)
 
-""" Проверка на наличие упущенных незаполненных данных """
-#sns.heatmap(trd.isnull(), cbar=False).set_title("Missing values heatmap train")
-#plt.show()
 
-#sns.heatmap(tsd.isnull(), cbar=False).set_title("Missing values heatmap test")
-#plt.show()
+def conv2arr(tr, embr, sex):
+    """ Converting panda into nparray """
+    testik = np.append(tr, embr, axis=1)
+    sets = np.append(testik, sex, axis=1)
 
-""" Создание модели """
-model = tf.keras.Sequential()
-model.add(tf.keras.layers.Dense(128, input_shape=(8, ), activation='relu'))
-model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+    return sets
 
-""" Компиляция модели """
+
+def tofloat(sets, set_labels):
+    """ Converting int to float """
+    sets = np.asarray(sets).astype(np.float32)
+    set_labels = np.asarray(set_labels).astype(np.float32)
+
+    return sets, set_labels
+
+
+def heatmap(tr):
+    """ Showing missing data """
+    sns.heatmap(tr.isnull(), cbar=False).set_title("Missing values heatmap")
+    plt.show()
+
+
+def createmodel():
+    """ Creating a model """
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.Dense(128, input_shape=(8,), activation='relu'))
+    model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+
+    return model
+
+
+filling_na(trd)
+filling_na(tsd)
+
+embr_train, sex_train = dummies(trd)
+embr_test, sex_test = dummies(tsd)
+
+train_set_labels, test_set_labels = label_init()
+
+table_drop()
+
+train_set = conv2arr(trd, embr_train, sex_train)
+test_set = conv2arr(tsd, embr_test, sex_test)
+
+train_set, train_set_labels = tofloat(train_set, train_set_labels)
+test_set, test_set_labels = tofloat(test_set, test_set_labels)
+
+model = createmodel()
+
 model.compile(optimizer='adam',
               loss='binary_crossentropy',
               metrics=['accuracy'])
 
-""" Тренировка модели """
 model.fit(train_set, train_set_labels, epochs=10)
 
-""" Оценка точности модели """
-test_loss, test_acc = model.evaluate(test_set,  test_set_labels, verbose=2)
-print('\nТочность на проверочных данных:', test_acc)
+test_loss, test_acc = model.evaluate(test_set, test_set_labels, verbose=2)
+print('\nAccuracy on test set:', test_acc)
 
-""" Угадывание выжил или нет """
 predictions = model.predict(test_set)
 
-""" Проверка рандомного значения на совпадение """
 print(np.argmax(predictions[0]))
 print(test_set_labels[0])
