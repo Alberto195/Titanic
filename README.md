@@ -3,18 +3,20 @@ Neural network to solve the titanic problem. Because it is shallow its accuracy 
 
 # Results
 Train on 891 samples
-Epoch 1/10
+Epoch 1/50
 
- 32/891 [>.............................] - ETA: 31s - loss: 1.9813 - accuracy: 0.2188
-544/891 [=================>............] - ETA: 0s - loss: 1.0142 - accuracy: 0.4926 
-891/891 [==============================] - 1s 1ms/sample - loss: 0.9337 - accuracy: 0.5477
+ 32/891 [>.............................] - ETA: 14s - loss: 0.7050 - accuracy: 0.5938
+768/891 [========================>.....] - ETA: 0s - loss: 0.6537 - accuracy: 0.6536 
+891/891 [==============================] - 1s 694us/sample - loss: 0.6524 - accuracy: 0.6577
+
 
 ...
 
-Epoch 10/10
+Epoch 50/50
 
- 32/891 [>.............................] - ETA: 0s - loss: 0.5103 - accuracy: 0.7188
-891/891 [==============================] - 0s 51us/sample - loss: 0.5041 - accuracy: 0.7508
-418/418 - 0s - loss: 0.4491 - accuracy: 0.8086
+ 32/891 [>.............................] - ETA: 0s - loss: 0.5782 - accuracy: 0.6875
+800/891 [=========================>....] - ETA: 0s - loss: 0.4505 - accuracy: 0.7950
+891/891 [==============================] - 0s 67us/sample - loss: 0.4419 - accuracy: 0.8002
+418/418 - 0s - loss: 0.2934 - accuracy: 0.9115
 
-Точность на проверочных данных: 0.80861247
+Accuracy on test set: 0.9114832
