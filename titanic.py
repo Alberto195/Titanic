@@ -1,7 +1,18 @@
 import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+import random as rn
+import os
+
+os.environ['PYTHONHASHSEED'] = '0'
+
+# Setting the seed for numpy-generated random numbers
+np.random.seed(38)
+
+# Setting the seed for python random numbers
+rn.seed(1254)
+
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 '''WHAT MATTERS
@@ -15,7 +26,7 @@ import seaborn as sns
     Cabin: it matters, just matters but too complicated for this model
     '''
 
-""" Data initialization"""
+""" Data initialization """
 trd = pd.read_csv('C:/titanic/train.csv')
 tsd = pd.read_csv('C:/titanic/test.csv')
 tsl = pd.read_csv('C:/titanic/gender_submission.csv')
@@ -75,7 +86,13 @@ def heatmap(tr):
 def createmodel():
     """ Creating a model """
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(128, input_shape=(8,), activation='relu'))
+    model.add(tf.keras.layers.Dense(128, input_shape=(8,), activation='tanh'))
+    model.add(tf.keras.layers.Dropout(rate=0.2))
+    model.add(tf.keras.layers.Dense(64, input_shape=(128,), activation='tanh'))
+    model.add(tf.keras.layers.Dense(70, input_shape=(64,), activation='tanh'))
+    model.add(tf.keras.layers.Dropout(rate=0.2))
+    model.add(tf.keras.layers.Dense(32, input_shape=(64,), activation='tanh'))
+    model.add(tf.keras.layers.Dropout(rate=0.2))
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
     return model
@@ -99,16 +116,28 @@ test_set, test_set_labels = tofloat(test_set, test_set_labels)
 
 model = createmodel()
 
+loss = tf.keras.losses.BinaryCrossentropy(
+    from_logits=False, label_smoothing=0, reduction="auto", name="binary_crossentropy"
+)
+
 model.compile(optimizer='adam',
-              loss='binary_crossentropy',
+              loss=loss,
               metrics=['accuracy'])
 
-model.fit(train_set, train_set_labels, epochs=10)
+model.fit(train_set, train_set_labels, epochs=50, shuffle=False)
 
 test_loss, test_acc = model.evaluate(test_set, test_set_labels, verbose=2)
 print('\nAccuracy on test set:', test_acc)
 
 predictions = model.predict(test_set)
 
-print(np.argmax(predictions[0]))
-print(test_set_labels[0])
+model.save_weights('first_try.h5')  # always save your weights after training or during training
+
+nin = 0
+wrong = []
+
+for i in predictions:
+    if np.argmax(i) != test_set_labels[nin]:
+        wrong.append(nin)
+    nin += 1
+
